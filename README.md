@@ -1,5 +1,5 @@
 # Vex PROS Basic
-This is our basic experimental codebase for the VEX Robotics Competition. We use the PROS kernel.
+This is our basic and foundational codebase for the VEX Robotics Competition. We use the PROS kernel.
 
 ## Building notes
 The build system is set up in a very unorthodox way. Files are built through executing a single build.bat file. 
