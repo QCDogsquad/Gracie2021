@@ -16,4 +16,4 @@ temp.errors
 .d/
 
 # Environment
-*.bat
+run_editor.bat
