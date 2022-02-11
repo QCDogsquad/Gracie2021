@@ -39,51 +39,51 @@ global_constant u8 IMU_PORT = 18;
 //~ Autonomous selector
 
 const char *MatchButtonsMap[] = {
- "None",
- "Auto A",
- "Auto B",
- "Auto C",
- "Auto D",
- "Auto E",
- "",
+    "None",
+    "Auto A",
+    "Auto B",
+    "Auto C",
+    "Auto D",
+    "Auto E",
+    "",
 };
 
 const char *SkillsButtonsMap[] = {
- "Auto A",
- "",
+    "Auto A",
+    "",
 };
 
 enum autonomous_mode {
- Autonomous_None    = 0,
- 
- MatchAutonomous_A  = 1,
- MatchAutonomous_B  = 2,
- MatchAutonomous_C  = 3,
- MatchAutonomous_D  = 4,
- MatchAutonomous_E  = 5,
- 
- SkillsAutonomous_A = 6,
- 
- // NOTE(Tyler): Always keep at the end
- Autonomous_TOTAL
+    Autonomous_None    = 0,
+    
+    MatchAutonomous_A  = 1,
+    MatchAutonomous_B  = 2,
+    MatchAutonomous_C  = 3,
+    MatchAutonomous_D  = 4,
+    MatchAutonomous_E  = 5,
+    
+    SkillsAutonomous_A = 6,
+    
+    // NOTE(Tyler): Always keep at the end
+    Autonomous_TOTAL
 };
 
 enum autonomous_selector_tab {
- AutonomousSelectorTab_None   = 0,
- AutonomousSelectorTab_Match  = 1,
- AutonomousSelectorTab_Skills = 2,
+    AutonomousSelectorTab_None   = 0,
+    AutonomousSelectorTab_Match  = 1,
+    AutonomousSelectorTab_Skills = 2,
 };
 
 struct autonomous_selector {
- autonomous_mode Selected;
- 
- lv_obj_t *Tabview;
- 
- lv_obj_t *MatchPage;
- lv_obj_t *MatchMatrix;
- 
- lv_obj_t *SkillsPage;
- lv_obj_t *SkillsMatrix;
+    autonomous_mode Selected;
+    
+    lv_obj_t *Tabview;
+    
+    lv_obj_t *MatchPage;
+    lv_obj_t *MatchMatrix;
+    
+    lv_obj_t *SkillsPage;
+    lv_obj_t *SkillsMatrix;
 };
 
 //~ Declarations
