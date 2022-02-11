@@ -1,6 +1,8 @@
 
 //~ Driver control
 void opcontrol(){
+ b8 LiftOverheated = false;
+ 
  b8 LiftToggled = false;
  b8 ReverseToggled = false;
  b8 SlowModeToggled = false;
@@ -32,6 +34,13 @@ void opcontrol(){
   if(controller_get_digital(CONTROLLER_MASTER, DIGITAL_R2)) motor_move_voltage(LIFT_MOTOR, -12000);
   else if(controller_get_digital(CONTROLLER_MASTER, DIGITAL_R1)) motor_move_voltage(LIFT_MOTOR, 12000);
 #endif
+  
+  //~ Safety and performance warning
+  if((motor_get_temperature(LIFT_MOTOR) >= 55) && 
+     !LiftOverheated){
+   controller_rumble(CONTROLLER_MASTER, "--------");
+   LiftOverheated = true;
+  }
   
   task_delay_until(&PreviousTime, MILLISECONDS_PER_TICK);
  }

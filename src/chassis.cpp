@@ -67,7 +67,8 @@ v2 ChassisIntegrateP(basic_chassis *Chassis, f64 dTime){
 //~ Autonomous functions
 // NOTE(Tyler): These functions are currently not suitable for use in OP control
 
-void ChassisMoveForwardAndWait(basic_chassis *Chassis, f64 Distance){
+// NOTE(Tyler): Distance IS IN METERS!!!
+void ChassisMoveAndWait(basic_chassis *Chassis, f64 Distance){
  f64 Rotations = Distance;
  f64 WheelCircumference = PI*Chassis->WheelDiameter;
  Rotations /= WheelCircumference;
@@ -78,9 +79,6 @@ void ChassisMoveForwardAndWait(basic_chassis *Chassis, f64 Distance){
  motor_move_relative(Chassis->Left,  Rotations, Chassis->AutonomousVelocity);
  motor_move_relative(Chassis->Right, Rotations, Chassis->AutonomousVelocity);
  
- // TODO(Tyler): I'm not sure if it is correct to multiply here, or if we would want to divide.
- // Or if we want to do any sort of operation with GearingFactor, or if we want to use 
- // WheelCircumference as well.
  const f64 Epsilon = 0.001;
  
  while(true){
@@ -100,7 +98,6 @@ void ChassisRotateAndWait(basic_chassis *Chassis, f64 Angle){
  
  const f64 Epsilon = 0.0001;
  
- // TODO(Tyler): I do not know if this is correct. This must be tested.
  while(true){
   f64 AverageP = 0.5*(motor_get_position(Chassis->Left)-motor_get_position(Chassis->Right));
   if(fabs(AverageP-StartP-Rotations) <= Epsilon) break;

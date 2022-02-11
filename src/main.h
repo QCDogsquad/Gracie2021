@@ -43,6 +43,8 @@ const char *MatchButtonsMap[] = {
  "Auto A",
  "Auto B",
  "Auto C",
+ "Auto D",
+ "Auto E",
  "",
 };
 
@@ -57,8 +59,10 @@ enum autonomous_mode {
  MatchAutonomous_A  = 1,
  MatchAutonomous_B  = 2,
  MatchAutonomous_C  = 3,
+ MatchAutonomous_D  = 4,
+ MatchAutonomous_E  = 5,
  
- SkillsAutonomous_A = 4,
+ SkillsAutonomous_A = 6,
  
  // NOTE(Tyler): Always keep at the end
  Autonomous_TOTAL
@@ -71,7 +75,7 @@ enum autonomous_selector_tab {
 };
 
 struct autonomous_selector {
- autonomous_mode Selected = MatchAutonomous_A;
+ autonomous_mode Selected;
  
  lv_obj_t *Tabview;
  

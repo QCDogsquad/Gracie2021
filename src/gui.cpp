@@ -1,9 +1,10 @@
 
 //~ Callbacks
 // NOTE(Tyler): strcmp returns 0 if the two strings are the same
-#define AUTONOMOUS_SELECTOR_TEST_MODE(Name, Mode, Index) \
-if(strcmp(Text, Name) == 0){ \
+#define AUTONOMOUS_SELECTOR_TEST_MODE(Mode, Index) \
+if(strcmp(Text, lv_btnm_get_map(Matrix)[Index]) == 0){ \
 AutonomousSelector.Selected = Mode; \
+lv_btnm_set_toggle(Matrix, true, Index); \
 return LV_RES_OK; \
 } 
 
@@ -12,12 +13,16 @@ lv_res_t AutonomousSelectorCallback(lv_obj_t *Matrix, const char *Text){
  u16 ActiveTab = lv_tabview_get_tab_act(AutonomousSelector.Tabview);
  
  if(ActiveTab == AutonomousSelectorTab_Match){
-  AUTONOMOUS_SELECTOR_TEST_MODE("None",   Autonomous_None,   0);
-  AUTONOMOUS_SELECTOR_TEST_MODE("Auto A", MatchAutonomous_A, 1);
-  AUTONOMOUS_SELECTOR_TEST_MODE("Auto B", MatchAutonomous_B, 2);
-  AUTONOMOUS_SELECTOR_TEST_MODE("Auto C", MatchAutonomous_C, 3);
+  lv_obj_t *Matrix = AutonomousSelector.MatchMatrix;
+  AUTONOMOUS_SELECTOR_TEST_MODE(Autonomous_None,   0);
+  AUTONOMOUS_SELECTOR_TEST_MODE(MatchAutonomous_A, 1);
+  AUTONOMOUS_SELECTOR_TEST_MODE(MatchAutonomous_B, 2);
+  AUTONOMOUS_SELECTOR_TEST_MODE(MatchAutonomous_C, 3);
+  AUTONOMOUS_SELECTOR_TEST_MODE(MatchAutonomous_D, 4);
+  AUTONOMOUS_SELECTOR_TEST_MODE(MatchAutonomous_E, 5);
  }else if(ActiveTab == AutonomousSelectorTab_Skills){
-  AUTONOMOUS_SELECTOR_TEST_MODE("Auto A", SkillsAutonomous_A, 0);
+  lv_obj_t *Matrix = AutonomousSelector.SkillsMatrix;
+  AUTONOMOUS_SELECTOR_TEST_MODE(SkillsAutonomous_A, 0);
  }else{
   AutonomousSelector.Selected = Autonomous_None;
  }
@@ -50,23 +55,17 @@ lv_obj_t *MakeButtonMatrix(lv_obj_t *Parent, const char **Map, lv_btnm_action_t 
  lv_obj_set_width(Result, Width);
  lv_btnm_set_action(Result, Action);
  
- //lv_btnm_set_style(AutonomousButtons, LV_BTNM_STYLE_BTN_REL, &ReleasedButtonStyle);
- //lv_btnm_set_style(AutonomousButtons, LV_BTNM_STYLE_BTN_PR,  &PressedButtonStyle);
- 
  return Result;
  
 }
 
+void InitStyle(lv_style_t *Style, lv_color_t MainColor){
+ lv_style_copy(Style, &lv_style_plain);
+ Style->body.main_color = MainColor;
+}
+
 //~ 
 void InitGUI(){
-#if 0
- lv_style_copy(&ReleasedButtonStyle, &lv_style_plain);
- ReleasedButtonStyle.body.main_color = LV_COLOR_MAKE(150, 0, 0);
- ReleasedButtonStyle.body.grad_color = LV_COLOR_MAKE(0, 0, 150);
- ReleasedButtonStyle.body.radius = 0;
- ReleasedButtonStyle.text.color = LV_COLOR_MAKE(255, 255, 255);
-#endif
- 
  AutonomousSelector.Tabview = lv_tabview_create(lv_scr_act(), 0);
  lv_tabview_add_tab(AutonomousSelector.Tabview, "None");
  
@@ -74,11 +73,15 @@ void InitGUI(){
  AutonomousSelector.MatchMatrix = MakeButtonMatrix(AutonomousSelector.MatchPage, 
                                                    MatchButtonsMap, 
                                                    AutonomousSelectorCallback);
- 
  AutonomousSelector.SkillsPage   = lv_tabview_add_tab(AutonomousSelector.Tabview, "Skills");
  AutonomousSelector.SkillsMatrix = MakeButtonMatrix(AutonomousSelector.SkillsPage, 
                                                     SkillsButtonsMap, 
                                                     AutonomousSelectorCallback);
  
+ // @default_auto
  lv_tabview_set_tab_act(AutonomousSelector.Tabview, AutonomousSelectorTab_Match, false);
+ AutonomousSelector.Selected = MatchAutonomous_A;
+ lv_btnm_set_toggle(AutonomousSelector.MatchMatrix, true, 1);
+ 
+ 
 }
