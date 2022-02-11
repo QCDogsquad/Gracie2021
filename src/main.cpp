@@ -1,17 +1,29 @@
 #include "main.h"
 
-global basic_chassis GlobalBasicChassis;
-global pidf_chassis  GlobalPIDFChassis;
+global autonomous_selector AutonomousSelector;
+global basic_chassis   RobotChassis;
 
 #include "chassis.cpp"
-#include "motion_profile.cpp"
+#include "gui.cpp"
+#include "opcontrol.cpp"
+#include "autonomous.cpp"
 
 //~ Initialization
 void initialize(){ 
- InitializeBasicChassis(&GlobalBasicChassis, GEARSET_6_MAX_VELOCITY, 
-                        LEFT_DRIVE_MOTOR, RIGHT_DRIVE_MOTOR);
- InitializeBasicChassis(&GlobalPIDFChassis, GEARSET_6_MAX_VELOCITY, 
-                        LEFT_DRIVE_MOTOR, RIGHT_DRIVE_MOTOR);
+ InitGUI();
+ 
+ motor_set_gearing(LEFT_DRIVE_MOTOR,  E_MOTOR_GEARSET_36);
+ motor_set_gearing(RIGHT_DRIVE_MOTOR, E_MOTOR_GEARSET_36);
+ 
+ InitChassis(&RobotChassis, 
+             LEFT_DRIVE_MOTOR, RIGHT_DRIVE_MOTOR, IMU_PORT,
+             GEARSET_36_MAX_VELOCITY, GEARSET_36_MAX_VELOCITY, 
+             Inch(15.5), Inch(4), 60.0/84.0);
+ 
+ motor_set_gearing(LIFT_MOTOR, E_MOTOR_GEARSET_36);
+ motor_set_encoder_units(LIFT_MOTOR,   E_MOTOR_ENCODER_DEGREES);
+ motor_set_brake_mode(LIFT_MOTOR,  E_MOTOR_BRAKE_HOLD);
+ motor_tare_position(LIFT_MOTOR);
 }
 
 //~ Competition initialization
@@ -20,34 +32,4 @@ void competition_initialize(){
 
 //~ Disabled
 void disabled(){
-}
-
-//~ Autonomous
-void 
-autonomous(){
- u32 PreviousTime = millis();
- while(true)
- {
-  
-  task_delay_until(&PreviousTime, MILLISECONDS_PER_TICK);
- }
-}
-
-//~ Driver control
-void
-opcontrol(){
- u32 PreviousTime = millis();
- f64 dTime = 1 / MILLISECONDS_PER_TICK;
- while(true)
- {
-  f64 Forward = (f64)controller_get_analog(E_CONTROLLER_MASTER, ANALOG_LEFT_Y)/127.0;
-  f64 Turn    = (f64)controller_get_analog(E_CONTROLLER_MASTER, ANALOG_LEFT_X)/127.0;
-  
-  // NOTE(Tyler): The inputs can be squared(after they are normalized) in order to lessen 
-  // sensitivity.
-  UpdateBasicChassisSkid(&GlobalBasicChassis, Forward, Turn);
-  //UpdatePIDFChassisSkid(&GlobalPIDFChassis, Forward, Turn, dTime);
-  
-  task_delay_until(&PreviousTime, MILLISECONDS_PER_TICK);
- }
 }

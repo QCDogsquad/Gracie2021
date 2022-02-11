@@ -4,10 +4,12 @@ patterns = {
 "*.c",
 "*.cpp",
 "*.h",
+"*.hpp",
 "*.m",
 "*.bat",
 "*.sh",
 "*.4coder",
+"*.pros",
 };
 blacklist_patterns = {
 ".*",

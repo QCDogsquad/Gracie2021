@@ -78,7 +78,7 @@ typedef _CNAMESPACE adi_ultrasonic_t Ultrasonic;
  * From rtos.h
  */
 #define taskCreate(taskCode, stackDepth, parameters, priority) \
-	task_create(taskCode, parameters, priority, stackDepth, "")
+task_create(taskCode, parameters, priority, stackDepth, "")
 #define taskDelete(task) task_delete(task)
 #define taskDelay task_delay
 #define taskDelayUntil(previousWakeTime, cycleTime) task_delay_until(previousWakeTime, cycleTime)
