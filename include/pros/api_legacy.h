@@ -10,7 +10,7 @@
  * This file should not be modified by users, since it gets replaced whenever
  * a kernel upgrade occurs.
  *
- * Copyright (c) 2017-2020, Purdue University ACM SIGBots.
+ * Copyright (c) 2017-2021, Purdue University ACM SIGBots.
  * All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -78,7 +78,7 @@ typedef _CNAMESPACE adi_ultrasonic_t Ultrasonic;
  * From rtos.h
  */
 #define taskCreate(taskCode, stackDepth, parameters, priority) \
-task_create(taskCode, parameters, priority, stackDepth, "")
+	task_create(taskCode, parameters, priority, stackDepth, "")
 #define taskDelete(task) task_delete(task)
 #define taskDelay task_delay
 #define taskDelayUntil(previousWakeTime, cycleTime) task_delay_until(previousWakeTime, cycleTime)

@@ -21,4 +21,4 @@ REM Do the compiling:
 
 REM DO the uploading:
 
-call upload.bat 
+REM call upload.bat

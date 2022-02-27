@@ -1,7 +1,7 @@
 #ifndef CHASSIS_H
 #define CHASSIS_H
 
-struct basic_chassis {
+struct robot_chassis {
  u8 Left;
  u8 Right;
  u8 IMU;
@@ -13,6 +13,7 @@ struct basic_chassis {
  f64 WheelDiameter;
  f64 GearingFactor;
  
+ //~ Odometry
  v2 dP;
  v2 P;
 };
