@@ -1,6 +1,13 @@
 
 //~ Driver control
 void opcontrol(){
+ ArenaClear(&TransientArena);
+ 
+ PreloadBegin(&RobotManager, &RobotPreload);
+ 
+ imu_reset(RobotChassis.IMU);
+ 
+ //~
  b8 LiftOverheated = false;
  
  b8 ReverseToggled = false;
@@ -32,44 +39,64 @@ void opcontrol(){
 #endif
   robot_chassis *Chassis = &RobotChassis;
   {
+   const f64 Epsilon = 0.15;
    
    imu_accel_s_t ddP = imu_get_accel(Chassis->IMU);
-   f64 Rotation = -imu_get_rotation(Chassis->IMU);
-   printf("A: (%f, %f, %f) | R: %f\n", ddP.x, ddP.y, ddP.z, Rotation);
+   local_persist f64 Rotation = 0.0;
+   imu_gyro_s_t RotationRate = imu_get_gyro_rate(Chassis->IMU);
+   if(RotationRate.z != INFINITY){
+    if(fabs(RotationRate.z) > Epsilon){
+     Rotation += RotationRate.z*dTime;
+    }
+   }
+#if 0
+   printf("R: %.6f | RR: %.8f\n", 
+          //ddP.x, ddP.y, ddP.z, 
+          Rotation, RotationRate.z);
+#endif
   }
   
   //~ Lift controls
   
   // NOTE(Tyler): Fullway
   if(controller_get_digital_new_press(CONTROLLER_MASTER, DIGITAL_R2)){
-   switch(LiftData.State){
-    case LiftState_Free:
-    case LiftState_Raised:  LiftData.State = LiftState_Fullway; break;
-    case LiftState_Partway: LiftData.State = LiftState_Fullway; break;
-    case LiftState_Fullway: LiftData.State = LiftState_Raised; break;
+   switch(RobotLift.State){
+    case LiftState_Free:    RobotLift.State = LiftState_Fullway; break;
+    case LiftState_Raised:  RobotLift.State = LiftState_Fullway; break;
+    case LiftState_Partway: RobotLift.State = LiftState_Fullway; break;
+    case LiftState_Fullway: RobotLift.State = LiftState_Raised;  break;
    }
   }
   
   // NOTE(Tyler): Partway
   if(controller_get_digital_new_press(CONTROLLER_MASTER, DIGITAL_R1)){
-   switch(LiftData.State){
-    case LiftState_Free:
-    case LiftState_Raised:  LiftData.State = LiftState_Partway; break;
-    case LiftState_Fullway: LiftData.State = LiftState_Partway; break;
-    case LiftState_Partway: LiftData.State = LiftState_Raised; break;
+   switch(RobotLift.State){
+    case LiftState_Free: {
+     RobotLift.NextState = LiftState_Raised;
+     RobotLift.State = LiftState_Partway;  
+    }break;
+    case LiftState_Raised: {
+     RobotLift.NextState = LiftState_Fullway;
+     RobotLift.State = LiftState_Partway;   
+    }break;
+    case LiftState_Fullway: {
+     RobotLift.NextState = LiftState_Raised;
+     RobotLift.State = LiftState_Partway;   
+    }break;
+    case LiftState_Partway: RobotLift.State = RobotLift.NextState; break;
    }
   }
   
   // NOTE(Tyler): Emergency manual control
   if(controller_get_digital(CONTROLLER_MASTER, DIGITAL_L2)){
-   LiftData.State = LiftState_Free;
+   RobotLift.State = LiftState_Free;
    motor_move_velocity(LEFT_LIFT_MOTOR,  LIFT_VELOCITY);
    motor_move_velocity(RIGHT_LIFT_MOTOR, LIFT_VELOCITY);
   }else if(controller_get_digital(CONTROLLER_MASTER, DIGITAL_L1)){
-   LiftData.State = LiftState_Free;
+   RobotLift.State = LiftState_Free;
    motor_move_velocity(LEFT_LIFT_MOTOR,  -LIFT_VELOCITY);
    motor_move_velocity(RIGHT_LIFT_MOTOR, -LIFT_VELOCITY);
-  }else if(LiftData.State == LiftState_Free){
+  }else if(RobotLift.State == LiftState_Free){
    motor_move_velocity(LEFT_LIFT_MOTOR,  0);
    motor_move_velocity(RIGHT_LIFT_MOTOR, 0);
   }
@@ -83,9 +110,23 @@ void opcontrol(){
    }
   }else LiftOverheated = false;
   
-  printf("Temp: %f %f\n", 
+#if 0  
+  printf("Temperature: %f %f\n", 
          motor_get_temperature(LEFT_LIFT_MOTOR), 
          motor_get_temperature(RIGHT_LIFT_MOTOR));
+#endif
+  
+  //~ Testing
+#if 0
+  if(controller_get_digital_new_press(CONTROLLER_MASTER, DIGITAL_A)){
+   DoPreload(&RobotManager, &RobotPreload, &RobotLift);
+  }
+#if 0
+  if(controller_get_digital_new_press(CONTROLLER_MASTER, DIGITAL_X)){
+   ChassisFollowTrajectory(&RobotChassis, &Trajectory);
+  }
+#endif
+#endif
   
   task_delay_until(&PreviousTime, MILLISECONDS_PER_TICK);
  }

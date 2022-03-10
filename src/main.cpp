@@ -1,19 +1,42 @@
 #include "main.h"
 
-global autonomous_selector AutonomousSelector;
-global robot_chassis   RobotChassis;
-global lift_data LiftData;
+global auto_selector AutoSelector;
+
+global robot_chassis RobotChassis;
+global lift_data     RobotLift;
+global preload_data  RobotPreload;
+
+global robot_manager  RobotManager;
+
+#include "basics.cpp"
+#include "motion_profile.cpp"
+#include "trajectory.cpp"
 
 #include "lift.cpp"
 #include "chassis.cpp"
 #include "gui.cpp"
+
+#include "robot.cpp"
+
 #include "opcontrol.cpp"
 #include "autonomous.cpp"
+
 //~ Initialization
 
 void initialize(){ 
+ {
+  u32 Size = Kilobytes(64);
+  void *Memory = malloc(Size);
+  InitializeArena(&PermanentArena, Memory, Size);
+ }
+ {
+  u32 Size = Kilobytes(512);
+  void *Memory = malloc(Size);
+  InitializeArena(&TransientArena, Memory, Size);
+ }
+ 
  InitGUI();
- InitLift();
+ InitLift(&RobotLift);
  
  //~ Preload
  motor_set_gearing(PRELOAD_MOTOR, E_MOTOR_GEARSET_18);
@@ -29,6 +52,8 @@ void initialize(){
  ChassisBrakeMode(&RobotChassis, E_MOTOR_BRAKE_HOLD);
  ChassisReverse(&RobotChassis, true);
  RobotChassis.IMU = IMU_PORT;
+ //imu_reset(RobotChassis.IMU);
+ InitRobot(&RobotManager);
 }
 
 //~ Competition initialization

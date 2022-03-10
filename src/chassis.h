@@ -16,6 +16,10 @@ struct robot_chassis {
  //~ Odometry
  v2 dP;
  v2 P;
+ 
+ //~ Autonomous
+ f64 LeftTarget;
+ f64 RightTarget;
 };
 
 

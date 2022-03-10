@@ -62,6 +62,8 @@ typedef double f64;
 #define F64_POSITIVE_INFINITY 0x7FF0000000000000 
 #define F64_NEGATIVE_INFINITY 0xFFF0000000000000 
 
+#define Assert(C) assert(C)
+
 //~ Simple conversions
 #define Radians(D) ((M_PI/180.0)*(D))
 #define Degrees(R) ((180.0/M_PI)*(R))
@@ -366,6 +368,33 @@ V2Lerp(v2 A, v2 B, f64 T){
  T = Clamp(T, 0.0f, 1.0f);
  v2 Result = T*A + (1.0f-T)*B;
  return(Result);
+}
+
+//~
+
+inline void 
+ZeroMemory(void *Memory, umw Size){
+ memset(Memory, 0, Size);
+}
+
+inline void
+MoveMemory(void *To, void *From, umw Size) {
+ memmove(To, From, Size);
+}
+
+inline void
+CopyMemory(void *To, void *From, umw Size){
+ memmove(To, From, Size);
+}
+
+inline u32
+CStringLength(const char *S){
+ return strlen(S);
+}
+
+inline void
+CopyCString(char *To, const char *From, u32 Size){
+ strncpy(To, From, Size);
 }
 
 #endif //TYLER_BASICS_H

@@ -1,110 +1,70 @@
-void LiftTask(void *Data){
- while(true){
-  switch(LiftData.State){
-   case LiftState_Raised: {
-    motor_move_absolute(LEFT_LIFT_MOTOR,  0, LIFT_VELOCITY);
-    motor_move_absolute(RIGHT_LIFT_MOTOR, 0, LIFT_VELOCITY);
-   }break;
-   case LiftState_Partway: {
-    motor_move_absolute(LEFT_LIFT_MOTOR,  LiftData.Movement-LIFT_PARTWAY_OFFSET, LIFT_VELOCITY);
-    motor_move_absolute(RIGHT_LIFT_MOTOR, LiftData.Movement-LIFT_PARTWAY_OFFSET, LIFT_VELOCITY);
-   }break;
-   case LiftState_Fullway: {
-    if(!adi_digital_read(LIFT_LIMIT)){
-     motor_move_velocity(LEFT_LIFT_MOTOR, LIFT_VELOCITY);
-     motor_move_velocity(RIGHT_LIFT_MOTOR, LIFT_VELOCITY);
-#if 0
-     motor_move_absolute(LEFT_LIFT_MOTOR,  LiftData.Movement, LIFT_VELOCITY);
-     motor_move_absolute(RIGHT_LIFT_MOTOR, LiftData.Movement, LIFT_VELOCITY);
-#endif
-    }
-   }break;
-   case LiftState_Free: break;
-  }
-  
-  if(adi_digital_read(LIFT_LIMIT)){
-   f64 Position = motor_get_position(LEFT_LIFT_MOTOR);
-   if((motor_get_target_position(LEFT_LIFT_MOTOR) > Position) ||
-      (motor_get_actual_velocity(LEFT_LIFT_MOTOR) > 0)){
-    if(LiftData.Movement < Position) LiftData.Movement = Position;
-    motor_move_velocity(LEFT_LIFT_MOTOR,  0);
-    motor_move_velocity(RIGHT_LIFT_MOTOR, 0);
+b8 LiftBackgroundUpdate(lift_data *Lift){
+ b8 Result = true;
+ 
+ const f64 Epsilon = 1.0;
+ u8 Left = LEFT_LIFT_MOTOR;
+ u8 Right = RIGHT_LIFT_MOTOR;
+ 
+ switch(Lift->State){
+  case LiftState_Raised: {
+   motor_move_absolute(LEFT_LIFT_MOTOR,  0, LIFT_VELOCITY);
+   motor_move_absolute(RIGHT_LIFT_MOTOR, 0, LIFT_VELOCITY);
+   
+   Result = Motor2xIsAtPosition(Left, Right, 0, Epsilon);
+  }break;
+  case LiftState_Partway: {
+   motor_move_absolute(LEFT_LIFT_MOTOR,  Lift->Movement-LIFT_PARTWAY_OFFSET, LIFT_VELOCITY);
+   motor_move_absolute(RIGHT_LIFT_MOTOR, Lift->Movement-LIFT_PARTWAY_OFFSET, LIFT_VELOCITY);
+   
+   f64 Target = Lift->Movement-LIFT_PARTWAY_OFFSET;
+   Result = Motor2xIsAtPosition(Left, Right, Target, Epsilon);
+  }break;
+  case LiftState_Fullway: {
+   if(adi_digital_read(LIFT_LIMIT)){
+    Result = true;
+   }else{
+    motor_move_velocity(LEFT_LIFT_MOTOR, LIFT_VELOCITY);
+    motor_move_velocity(RIGHT_LIFT_MOTOR, LIFT_VELOCITY);
+    Result = false;
    }
-  }
-  
-  // Doesn't need to be uber fast
-  delay(20);
+  }break;
+  case LiftState_Free: break;
  }
+ 
+ if(adi_digital_read(LIFT_LIMIT)){
+  f64 Position = motor_get_position(LEFT_LIFT_MOTOR);
+  if((motor_get_target_position(LEFT_LIFT_MOTOR) > Position) ||
+     (motor_get_actual_velocity(LEFT_LIFT_MOTOR) > 0)){
+   //if(Lift->Movement < Position) Lift->Movement = Position;
+   motor_move_velocity(LEFT_LIFT_MOTOR,  0);
+   motor_move_velocity(RIGHT_LIFT_MOTOR, 0);
+   
+   Result = true;
+  }
+ }
+ 
+ Lift->Done = Result;
+ return Result;
 }
 
 //~ Fullway
-void LowerLift(){
- LiftData.State = LiftState_Fullway;
+void LiftLower(robot_manager *Robot, lift_data *Lift){
+ Lift->State = LiftState_Fullway;
+ RobotSubsystemNotDone(Robot, Subsystem_Lift);
 }
 
-void RaiseLift(){
- LiftData.State = LiftState_Raised;
+void LiftRaise(robot_manager *Robot, lift_data *Lift){
+ Lift->State = LiftState_Raised;
+ RobotSubsystemNotDone(Robot, Subsystem_Lift);
 }
 
-void LowerLiftAndWait(){
- LiftData.State = LiftState_Fullway;
- 
- u8 Left = LEFT_LIFT_MOTOR;
- u8 Right = RIGHT_LIFT_MOTOR;
- 
- const f64 Epsilon = 1.0;
- 
- while(true){
-  f64 AverageP = 0.5*(motor_get_position(Left)+motor_get_position(Right));
-  if(fabs(AverageP-LiftData.Movement) <= Epsilon) break;
-  if(adi_digital_read(LIFT_LIMIT)) break;
-  delay(1);
- }
-}
-
-void RaiseLiftAndWait(){
- LiftData.State = LiftState_Raised;
- 
- u8 Left = LEFT_LIFT_MOTOR;
- u8 Right = RIGHT_LIFT_MOTOR;
- 
- const f64 Epsilon = 1.0;
- 
- while(true){
-  f64 AverageP = 0.5*(motor_get_position(Left)+motor_get_position(Right));
-  if(fabs(AverageP) <= Epsilon) break;
-  delay(1);
- }
-}
-
-//~ Partway
-void LowerLiftPartway(){
- LiftData.State = LiftState_Partway;
-}
-
-void LowerLiftPartwayAndWait(){
- LiftData.State = LiftState_Partway;
- 
- f64 Target = LiftData.Movement-LIFT_PARTWAY_OFFSET;
- 
- u8 Left = LEFT_LIFT_MOTOR;
- u8 Right = RIGHT_LIFT_MOTOR;
- 
- const f64 Epsilon = 1.0;
- 
- while(true){
-  f64 AverageP = 0.5*(motor_get_position(Left)+motor_get_position(Right));
-  if(fabs(AverageP-Target) <= Epsilon) break;
-  delay(1);
- }
+void LiftPartway(robot_manager *Robot, lift_data *Lift){
+ Lift->State = LiftState_Partway;
+ RobotSubsystemNotDone(Robot, Subsystem_Lift);
 }
 
 //~ Initialize
-void InitLift(){
- task_create(LiftTask, 0, 
-             TASK_PRIORITY_DEFAULT-2, TASK_STACK_DEPTH_DEFAULT, 
-             "LiftTask");
- 
+void InitLift(lift_data *Lift){
  // Motor setup
  motor_set_gearing(LEFT_LIFT_MOTOR, E_MOTOR_GEARSET_36);
  motor_set_encoder_units(LEFT_LIFT_MOTOR,   E_MOTOR_ENCODER_DEGREES);
